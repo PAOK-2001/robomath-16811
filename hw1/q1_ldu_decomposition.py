@@ -1,6 +1,6 @@
 
 """
-ldu_decomposition.py
+q1_ldu_decomposition.py
 
 Author: Pablo Ortega Kral (portegak)
 """
@@ -10,29 +10,29 @@ import numpy as np
 
 from typing import Tuple
 
-def get_pivot_matrix(A: np.array):
-    # We can find the pivot matrix prior to any calculation using Doolittle's method
+
+
+def ldu(A: np.array) -> Tuple[np.array]:
+    # Initialize
     rows, cols = A.shape
     P = np.eye(rows, dtype= np.float64)
-    for i in range(rows):
-        max_row = np.argmax(np.abs(A[i:, i])) + i
-        if i != max_row:
-             P[[i, max_row]] = P[[max_row, i]]
-    return P
-
-def ldu(A: np.array, pivot: bool = False) -> Tuple[np.array]:
-    rows, cols = A.shape
-
-    P = get_pivot_matrix(A)
-    A_pivoted =  P@A # Apply transformation to re-index A
-    L = np.eye(rows, dtype= np.float64)# Lower Triangular mxm
+    L = np.eye(rows, dtype= np.float64) 
     U = np.zeros(shape=(rows,cols), dtype= np.float64)
-    DU = A_pivoted.copy()
+    DU = A.copy()
 
-    # Iterate through matrix diagonal and perform gaussian elimination
+    # Iterate through matrix diagonal and perform gaussian elimination, with pivot chanding
     for j in range(cols):
+            # Iterate rows below diagonal element.
         for i in range(j+1,rows):
             if DU[i][j] != 0:
+                # If above diagonal is 0, cannot be used for elimination. Pivot by finding row with largest diagonal element.
+                if DU[j][j] == 0.0:
+                    max_row = np.argmax(np.abs(DU[j:, j])) + j
+                    DU[[j, max_row]] = DU[[max_row, j]]
+                    P[[j, max_row]] = P[[max_row, j]]
+                    if j > 0:
+                        L[[j, max_row], :j] = L[[max_row, j], :j]
+                # Calculate factor to 0-out row, track this factor in L
                 scaler = DU[i][j]/DU[j][j] 
                 DU[i] = DU[i] - scaler* DU[j]
                 L[i][j] = scaler
@@ -54,7 +54,6 @@ if __name__ == "__main__":
     ], dtype= np.float64)
 
     P, L, D, U = ldu(A)
-
     assert (P@A == L@D@U).all(), "Factorization does not equal original matrix!"
     print("---LDU Decomposition---")
 
