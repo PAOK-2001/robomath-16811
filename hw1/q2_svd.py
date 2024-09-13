@@ -1,3 +1,9 @@
+"""
+q1_ldu_decomposition.py
+
+Author: Pablo Ortega Kral (portegak)
+"""
+
 import numpy as np
 
 def get_svd(A: np.array, print_result: bool = True):

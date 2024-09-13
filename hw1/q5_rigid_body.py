@@ -3,6 +3,7 @@
 Author: Pablo Agustín Ortega Kral (portegak)
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -57,7 +58,8 @@ def get_test_set(n_points: int = 5, angle: float = 45, d: tuple = (1,2,3)):
 
     return (original_points, generated_points, applied_rot, applied_trans)
 
-def plot(P_original, Q_original, Q_prime):
+def plot(P_original, Q_original, Q_prime, out = './results', tag = 'test'):
+    os.makedirs(out, exist_ok =  True)
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(P_original[:, 0], P_original[:, 1], P_original[:, 2], c='purple', s = 30, marker = 'o', label='P')
@@ -67,13 +69,13 @@ def plot(P_original, Q_original, Q_prime):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.legend()
-    plt.show()
+    plt.savefig(os.path.join(out, f"rigid_transformation_{tag}.png"))
 
 
 if __name__ == "__main__":
-    P_original, Q_original, R_org, T_org = get_test_set()
+    P_original, Q_original, R_org, T_org = get_test_set(n_points= 20)
     R, T = get_transformation_params(P_original.T, Q_original.T)
     Q_calculated =  apply_transform(P_original, R, T)
     np.testing.assert_allclose(R, R_org, atol= 1e-8)
     np.testing.assert_allclose(T, T_org, atol= 1e-8)
-    plot(P_original, Q_original, Q_prime= Q_calculated)
+    plot(P_original, Q_original, Q_prime= Q_calculated, tag= f"n_points{20}")

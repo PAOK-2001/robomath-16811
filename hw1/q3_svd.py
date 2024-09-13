@@ -1,3 +1,9 @@
+"""
+q1_ldu_decomposition.py
+
+Author: Pablo Ortega Kral (portegak)
+"""
+
 import numpy as np
 import scipy
 import scipy.linalg
