@@ -22,26 +22,20 @@ def get_rotation_matrix3D(angle: float = 45):
         [0, 0, 1]
     ])
 
-def get_transformation_params(P_original: np.array, Q_original: np.array) -> Tuple:
-    dim, n_points = P_original.shape
-    # Get centroids and center points
-    P_bar = np.mean(P_original, axis= 1)
-    Q_bar = np.mean(Q_original, axis = 1)
+def center_point(P_org):
+    P_bar = np.mean(P_org, axis= 1)
+    P = P_org - P_bar[:, np.newaxis]
+    return P_bar, P
 
-    P = P_original - P_bar[:, np.newaxis]
-    Q = Q_original - Q_bar[:, np.newaxis]
+def get_transformation_params(P_original: np.array, Q_original: np.array) -> Tuple:
+    # Get centroids and center points
+    P_bar, P = center_point(P_original)
+    Q_bar, Q = center_point(Q_original)
 
     C = P @ Q.T
 
     U, _ , Vh = np.linalg.svd(C)
-    V = Vh.T
-
-    R = V @ U.T
-    det = np.linalg.det(R)
-    # If needed fix the sign the rotation
-    if det < 0:
-        V[-1, :] = -1 * V[-1, :] 
-        R = V @ U.T
+    R = Vh.T @ U.T
 
     trans = Q_bar - (R @ P_bar)
 
@@ -52,8 +46,8 @@ def get_test_set(n_points: int = 5, angle: float = 45, d: tuple = (1,2,3)):
     original_points = np.random.rand(n_points, 3)
 
     applied_rot = get_rotation_matrix3D(angle)
-
     applied_trans = np.array([d[0], d[1], d[2]])
+    
     generated_points = apply_transform(original_points, applied_rot, applied_trans)
 
     return (original_points, generated_points, applied_rot, applied_trans)
