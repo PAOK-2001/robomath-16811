@@ -4,7 +4,6 @@ q1_test_ldu.py
 Author: Pablo Ortega Kral (portegak)
 """
 
-import pprint
 import unittest
 import numpy as np
 
