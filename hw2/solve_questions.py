@@ -83,10 +83,10 @@ def Q1():
 def Q2():
     print("######################## Q1 ########################")
     def f(x):
-        return math.tan(x)
+        return math.tan(x) - x
     
     def df(x):
-        return 1/(math.cos(x)**2)
+        return -1 + 1/(math.cos(x)**2)
 
     lower_bound, upper_bound = C.initial_root_estimate(f, pivot= 15)
     print(f"Initial estimate for root: {lower_bound, upper_bound}")
@@ -116,6 +116,9 @@ def Q7(x_min = -3, x_max = 3, n_points = 1000):
     P = 2*X**2 + 2*Y**2 - 4*X -4*Y + 3
     Q = X**2 + Y**2 + 2*X*Y -5*X -3*Y +4
 
+
+    plt.scatter(0.91594130, 0.29790, c="red")
+    plt.scatter(1.70209, 1.0841, c="red")
     plt.contour(X, Y, Q, levels=[0], colors='orange')
     plt.contour(X, Y, P, levels=[0], colors='purple')
     plt.xlabel("X")
