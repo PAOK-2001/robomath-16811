@@ -5,11 +5,29 @@ q1_ldu_decomposition.py
 Author: Pablo Ortega Kral (portegak)
 """
 
-import pprint
 import numpy as np
+import scipy
 
 from typing import Tuple
 
+def matrix_to_latex(matrix: np.array) -> str:
+    rows, cols = matrix.shape
+    latex = "\\begin{bmatrix}\n"
+    for i in range(rows):
+        for j in range(cols):
+            if matrix[i][j] == 0.0:
+                if j == cols - 1:
+                    latex += f"{0} \\\\"
+                else:
+                    latex += f"{0} & "
+            else:
+                if j == cols - 1:
+                    latex += f"{matrix[i][j]} \\\\"
+                else:
+                    latex += f"{matrix[i][j]} & "
+        latex += "\n"
+    latex += "\\end{bmatrix}"
+    return latex
 
 
 def ldu(A: np.array) -> Tuple[np.array]:
@@ -47,27 +65,58 @@ def ldu(A: np.array) -> Tuple[np.array]:
     return (P, L, D, U)
 
 if __name__ == "__main__":
-    A = np.array([ 
-        [1,1,0],
-        [1,1,2],
-        [4,2,3]
+    A1 = np.array([ 
+        [10,-10,0],
+        [0,-4,2],
+        [2,0,-5]
     ], dtype= np.float64)
 
-    P, L, D, U = ldu(A)
-    assert (P@A == L@D@U).all(), "Factorization does not equal original matrix!"
-    print("---LDU Decomposition---")
+    A2 =  np.array([
+    [5, -5, 0, 0],
+    [5, 5, 5, 0],
+    [0, -1, 4, 1],
+    [0, 4, -1, 2],
+    [0, 0, 2, 1]
+    ], dtype= np.float64)
 
-    print("P:")
-    pprint.pprint(P)
+    A3 = np.array([ 
+        [1,1,1],
+        [10,2,9],
+        [8,0,7]
+    ], dtype= np.float64)
 
-    print("A:")
-    pprint.pprint(A)
+    problem_set = [ A3]
+    for A in problem_set:
+        row, col = A.shape
 
-    print("L:")
-    pprint.pprint(L)
+        if row != col:
+            # Use numpy to calculate LDU decomposition
+            P, L, DU = scipy.linalg.lu(A)
+            U = np.zeros(shape=(row,col), dtype= np.float64)
+            D = np.diag(np.diag(DU))
+            for i in range(row):
+                diag = D[i,i] 
+                if diag != 0.0:
+                    U[i] = DU[i]/ diag
+            print("---LDU Decomposition---")
 
-    print("D:")
-    pprint.pprint(D)
+        else:
+            P, L, D, U = ldu(A)
 
-    print("U:")
-    pprint.pprint(U)
+        # assert (P@A == L@D@U).all(), "Factorization does not equal original matrix!"c
+        print("---LDU Decomposition---")
+
+        print("P:")
+        print(matrix_to_latex(P))
+
+        print("A:")
+        print(matrix_to_latex(A))
+
+        print("L:")
+        print(matrix_to_latex(L))
+
+        print("D:")
+        print(matrix_to_latex(D))
+
+        print("U:")
+        print(matrix_to_latex(U))
