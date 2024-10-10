@@ -1,16 +1,41 @@
 import math
 
-def constant(x, c = 1):
-    return c
+class Constant:
+    def __init__(self, c=1):
+        self.c = c
+        self.print_txt = f"{c}"
 
-def linear(x, c = 1):
-    return c * x
+    def __call__(self, x):
+        return self.c
 
-def quadratic(x, c = 1):
-    return c * x**2
+class Linear:
+    def __init__(self, c=1):
+        self.c = c
+        self.print_txt = f"{c} * x"
 
-def cos_pi(x, c = 1):
-    return math.cos(c * math.pi * x)
+    def __call__(self, x):
+        return self.c * x
 
-def sin_pi(x, c = 1):
-    return math.sin(c* math.pi * x)
+class Quadratic:
+    def __init__(self, c=1):
+        self.c = c
+        self.print_txt = f"{c} * x^2"
+
+    def __call__(self, x):
+        return self.c * x**2
+
+class CosPi:
+    def __init__(self, c=1):
+        self.c = c
+        self.print_txt = f"cos({c} * pi * x)"
+
+    def __call__(self, x):
+        return math.cos(self.c * math.pi * x)
+
+class SinPi:
+    def __init__(self, c=1):
+        self.c = c
+        self.print_txt = f"sin({c} * pi * x)"
+
+    def __call__(self, x):
+        return math.sin(self.c * math.pi * x)

@@ -1,5 +1,6 @@
 import numpy as np
 from utils import load_point_cloud, plot_point_cloud
+from least_squares import solve_system_svd
 
 def fit_plane(point_cloud):
     """
@@ -15,9 +16,10 @@ def fit_plane(point_cloud):
     pc = np.column_stack((x, y, z))
     obs = -np.ones(pc.shape[0])
 
-    coeff = np.linalg.lstsq(pc, obs, rcond=None)[0]
-    a, b, c = coeff
-    print(f"Plane equation: {a}x + {b}y + {c}z + {d} = 0")
+    coeff = solve_system_svd(pc, obs)
+    coeff = np.append(coeff, d)
+
+    return tuple(coeff)
 
 if __name__ == "__main__":
     # Data path
@@ -30,5 +32,5 @@ if __name__ == "__main__":
 
     # Load point cloud
     pc_a = load_point_cloud(paths["part_a"])
-    plot_point_cloud(pc_a)
-    fit_plane(pc_a)
+    coeff = fit_plane(pc_a)
+    # plot_point_cloud(pc_a)
