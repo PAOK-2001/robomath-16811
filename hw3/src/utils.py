@@ -17,8 +17,8 @@ def poly_from_coeffs(coeffs: list) -> callable:
 def plot_plane(coeff: tuple, x, y, ax: plt.Axes):
     # Assume the plane is defined by ax + by + cz + d = 0
     a, b, c, d = coeff
-    x = np.linspace(np.min(x), np.max(x), 10)
-    y = np.linspace(np.min(y), np.max(y), 10)
+    x = np.linspace(np.min(x), np.max(x), 5)
+    y = np.linspace(np.min(y), np.max(y), 5)
     X, Y = np.meshgrid(x, y)
     Z = (-a*X - b*Y - d) / c
     ax.plot_surface(X, Y, Z, alpha=0.5)
@@ -57,6 +57,7 @@ def plot_pc_and_plane(pc, coeff, tag = None, save=False):
     ax.set_zlabel('Z')
     if save:
         plt.savefig(f'results/{tag}.png')
+        plt.close()
         return
     plt.show()
 
