@@ -47,22 +47,19 @@ def fit_plane_robust(point_cloud, samples  = 5, max_iter=100, tol=0.01):
             best_coeff = curr_coeff
     return best_coeff
 
-def fit_multiple_planes(point_cloud, samples= 7, max_iter=1000, tol=0.01, atol=0.1):
+def fit_multiple_planes(point_cloud, samples= 7, max_iter = 100, ransac_iter=1000, tol=0.01):
     iter = 0
     pc = point_cloud.copy()
     planes = []
 
     while iter < max_iter and pc.shape[0] > samples:
-        coeff = fit_plane_robust(pc, samples=7, max_iter=max_iter, tol=tol)
-        curr_inliers = get_plane_error(coeff, pc) < np.mean(get_plane_error(coeff, pc))
+        coeff = fit_plane_robust(pc, samples=7, max_iter=ransac_iter, tol=tol)
+        curr_inliers = get_plane_error(coeff, pc) < tol
         planes.append(coeff)
         pc = pc[~curr_inliers]
         iter += 1
     print(f"Found {len(planes)} planes")
     return planes
-
-
-    
 
 if __name__ == "__main__":
     # Data path
@@ -100,16 +97,13 @@ if __name__ == "__main__":
 
     # Part D
     pc_d = load_point_cloud(paths["part_d"])
-    planes = fit_multiple_planes(pc_d, samples=7, max_iter=100, tol=0.002, atol=0.001)
+    planes = fit_multiple_planes(pc_d, samples=7, max_iter=100, ransac_iter = 1000,tol=0.002)
     for i, coeff in enumerate(planes):
         a, b, c, d = coeff
         print(f"Fitted plane coefficients {i}: {a}x + {b}y + {c}z + {d} = 0")
         plot_pc_and_plane(pc_d, coeff, f"part_d_{i}", save=True)
         print("Average error: ", np.mean(get_plane_error(coeff, pc_d)))
-    # a, b, c, d = coeff
-    # print(f"Fitted plane coefficients: {a}x + {b}y + {c}z + {d} = 0")
-    # plot_pc_and_plane(pc_d, coeff, "part_d", save=False)
-    # print("Average error: ", np.mean(get_plane_error(coeff, pc_d)))
+
 
 
 

@@ -44,7 +44,7 @@ def Q1():
     errors = []
     N = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 40]
     for n in N:
-        X = [i*(2/n) -1 for i in range(0,n)]
+        X = [i*(2/n) -1 for i in range(0,n+1)]
         Y = [f_c(x) for x in X]
         dd_table = DD.divided_diff(np.array(X), np.array(Y))
         eval_range = list(np.linspace(-1, 1, 10000)) 

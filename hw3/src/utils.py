@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def print_poly(coeffs: list):
-    # In ascending order
     n = len(coeffs)
     for i in range(n):
         print(f"{coeffs[i]}x^{i}", end="")
@@ -15,7 +14,6 @@ def poly_from_coeffs(coeffs: list) -> callable:
     return poly
 
 def plot_plane(coeff: tuple, x, y, ax: plt.Axes):
-    # Assume the plane is defined by ax + by + cz + d = 0
     a, b, c, d = coeff
     x = np.linspace(np.min(x), np.max(x), 5)
     y = np.linspace(np.min(y), np.max(y), 5)
@@ -27,9 +25,6 @@ def load_point_cloud(path: str) -> np.ndarray:
     """
     Load point cloud from text file.
     """
-
-    # Each row of the text file is a point in the point cloud.
-    # Each column of the row is the x, y, z coordinates of the point.
     point_cloud = np.loadtxt(path) # shape: (n, 3)
     return point_cloud
 
@@ -64,7 +59,6 @@ def plot_pc_and_plane(pc, coeff, tag = None, save=False):
 
 def load_data_point(path):
     y = np.loadtxt(path)
-    # X is i/100 for each element in y
     x = np.array([i/100 for i in range(len(y))])
     return np.column_stack((x, y))
 
