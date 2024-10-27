@@ -33,7 +33,7 @@ def Q1():
     print(f"c) Real value for x = 0.07. {f_c(0.07)}")
     N = [2, 4, 40]
     for n in N:
-        X = [i*2/n -1 for i in range(n)]
+        X = [(i*2/n) -1 for i in range(n+1)]
         Y = [f_c(x) for x in X]
         dd_table = DD.divided_diff(np.array(X), np.array(Y))
 
@@ -44,7 +44,7 @@ def Q1():
     errors = []
     N = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 40]
     for n in N:
-        X = [i*(2/n) -1 for i in range(0,n+1)]
+        X = [(i*2/n) -1 for i in range(0,n+1)]
         Y = [f_c(x) for x in X]
         dd_table = DD.divided_diff(np.array(X), np.array(Y))
         eval_range = list(np.linspace(-1, 1, 10000)) 
