@@ -7,7 +7,8 @@ BOUNDS = 0, 100
 
 
 def zero_gradient(path, grad_values, tol = 1e-5):
-    return np.allclose(grad_values, 0, atol=tol)
+    np.linalg.norm(grad_values, axis=1)
+    return  np.all(grad_values < tol)
 
 def get_path_grad(path):
     path_grad = np.empty(path.shape)
@@ -33,7 +34,8 @@ def optmize_path_gd(path: np.array, grad : tuple, convergence_criteria : callabl
         path = np.clip(path, BOUNDS[0], BOUNDS[1])
         if i == 1:
             plot_scene(path, obstacle_cost, tag="first_iter_simple_gradient", title=f"Simple Gradient Descent (Iter {i})")
-        if convergence_criteria(path, grad_values, tol = 1e-5):
+        if convergence_criteria(path, learning_rate* grad_values, tol = 1e-2):
+            print("Converged!")
             break
     print(f"Optimization finished after {i} iterations")
     return path, i
