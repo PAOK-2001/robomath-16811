@@ -22,27 +22,27 @@ class Orientation(Enum):
     CLOCKWISE = 1
     COUNTER_CLOCKWISE = 2
 
+# Helper function to get the polar angle between two points
+def get_polar_angle(p1: np.array, p2: np.array) -> float:
+    '''
+    Returns the polar angle between two points.
+    '''
+    angle = np.arctan2(p2[1] - p1[1], p2[0] - p1[0])
+    return angle
+# Helper function to compute orientation of three points
+def get_triplet_orientation(p1, p2, p3):
+    val = np.cross(p2 - p1, p3 - p1)
+    if val == 0:
+        return Orientation.COLINEAR
+    elif val > 0:
+        return Orientation.COUNTER_CLOCKWISE
+    elif val < 0:
+        return Orientation.CLOCKWISE
+
 def convex_hull_2D(points: np.array) -> np.array:
     '''
     Computes the convex hull of a set of 2D points using Graham Scan.
     '''
-    # Helper function to get the polar angle between two points
-    def get_polar_angle(p1: np.array, p2: np.array) -> float:
-        '''
-        Returns the polar angle between two points.
-        '''
-        angle = np.arctan2(p2[1] - p1[1], p2[0] - p1[0])
-        return angle
-    # Helper function to compute orientation of three points
-    def get_triplet_orientation(p1, p2, p3):
-        val = np.cross(p2 - p1, p3 - p1)
-        if val == 0:
-            return Orientation.COLINEAR
-        elif val > 0:
-            return Orientation.COUNTER_CLOCKWISE
-        elif val < 0:
-            return Orientation.CLOCKWISE
-        
     # Pick the point with the smallest y-coordinate as the starting point
     start_idx = np.argmin(points[:, 1])
     start_point = points[start_idx]
