@@ -1,19 +1,21 @@
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from enum import Enum
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 def plot_convex_hull(points: np.array, hull: np.array, ax: plt.Axes = None):
     if ax is None:
         fig, ax = plt.subplots()
-    ax.plot(hull[:, 0], hull[:, 1], c='g', zorder=0)
-    ax.fill(hull[:, 0], hull[:, 1], 'g', alpha=0.3, zorder=0)
-    ax.scatter(points[:, 0], points[:, 1])
+    ax.scatter(points[:, 0], points[:, 1], zorder=0)
+    # ax.plot(hull[:, 0], hull[:, 1], c='g', zorder=0)
+    ax.fill(hull[:, 0], hull[:, 1], 'g', alpha=0.3, zorder=1, edgecolor='g', linewidth=2)
     return ax
 
 def generate_random_points(n: int, seed: int = 0):
     np.random.seed(seed)
-    return np.random.rand(n, 2)
+    points = np.random.uniform(low=-10, high=100, size=(n,2))
+    return points
 
 class Orientation(Enum):
     COLINEAR = 0
@@ -59,9 +61,9 @@ def convex_hull_2D(points: np.array) -> np.array:
                 hull_stack.pop()
             elif get_triplet_orientation(p1, p2, p3) is Orientation.COUNTER_CLOCKWISE:
                 break
+            else:
+                break
         hull_stack.append(p1)
-    # Close the polygon
-    hull_stack.append(sorted_points[0])
     hull = np.array(hull_stack)
     return hull
 
@@ -70,9 +72,9 @@ if __name__ == "__main__":
     OUT_DIR = os.path.join('output', 'convex_hull')
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    n_cases = [5, 10, 20,  100, 200, 1000]
-    for n in n_cases:
-        points = generate_random_points(n)
+    n_cases = [5, 27, 31,  143, 200, 1000, 5000]
+    for n in tqdm(n_cases, desc="Generating convex hulls"):
+        points = generate_random_points(n, seed = 56)
         hull = convex_hull_2D(points)
         plot_convex_hull(points, hull)
         file_out = os.path.join(OUT_DIR, f'convex_hull_n_points{n}.png')
