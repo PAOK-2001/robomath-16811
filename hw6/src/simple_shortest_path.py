@@ -1,9 +1,9 @@
 import os
+import shapely
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon
-import shapely
-from convex_hull_2d import get_triplet_orientation, Orientation
+from convex_hull_2d import get_triplet_orientation, Orientation, convex_hull_2D
 
 def on_segment(p1, p2, q):
     # Check if q lies on the line segment p1p2
@@ -79,7 +79,7 @@ def dijkstra(edges: list, start: np.array, goal: np.array) -> np.array:
 
     path.reverse()
     return np.array(path)
-
+    
 class Polygon:
     def __init__(self, vertices: np.array):
         self.vertices = vertices
@@ -104,12 +104,13 @@ class Polygon:
                 if  x <= max(vertix[0], next_vertix[0]):
                     intersect_point = (y - vertix[1]) * (next_vertix[0] - vertix[0]) / (next_vertix[1] - vertix[1]) + vertix[0]
                     if vertix[0] == next_vertix[0] or x <= intersect_point:
-                        intersection_count += 1
+                        if point not in self.vertices:
+                            intersection_count += 1
             vertix = next_vertix
 
         return intersection_count % 2 == 1 # Odd number of intersections means point is inside polygon
     
-    def line_crosses(self, p1: np.array, p2: np.array, breakpoints=False):
+    def line_crosses(self, p1: np.array, p2: np.array):
         for k in range(len(self.vertices)):
             v1 = self.vertices[k]
             v2 = self.vertices[(k + 1) % len(self.vertices)]
@@ -143,6 +144,38 @@ class Polygon:
             else:
                 return True
         return False
+
+    def reflect_about_point(self, polygon: 'Polygon' , point: np.array):
+        x_r, y_r = point[0], point[1]
+        # Reflect each vertex of the polygon
+        reflected_vertices = []
+        for vertex in polygon.vertices:
+            x, y = vertex[0], vertex[1]
+            x_reflected = 2 * x_r - x
+            y_reflected = 2 * y_r - y
+            reflected_vertices.append([x_reflected, y_reflected])
+        return Polygon(np.array(reflected_vertices))
+
+    def dialiate_by_polygon(self, polygon: 'Polygon'):
+        reference_point = polygon.vertices[0]
+        # Reflect the shape about the reference point
+        reflected_poly = self.reflect_about_point(polygon, reference_point)
+        # Express points as relative displacements from reference point
+        relative_vertices = []
+        for vertex in reflected_poly.vertices:
+            relative_vertex = vertex - reference_point
+            relative_vertices.append(relative_vertex)
+        # Add the reflected polygon to each vertex of the original polygon
+        dialated_vertices = []
+        for vertex in self.vertices:
+            dialated_vertices.append(vertex)
+            for relative_vertex in relative_vertices:
+                dialated_vertex = vertex + relative_vertex
+                dialated_vertices.append(dialated_vertex)
+        dialated_vertices = np.array(dialated_vertices)
+        expanded_poly = convex_hull_2D(dialated_vertices)
+        return Polygon(expanded_poly)
+    
 
     def line_intersects(self, p1: np.array, p2: np.array):
         # Note: Using shapely for verification purposes, not used in the main implementation
@@ -203,11 +236,11 @@ class Map:
         
     def is_valid_edge(self, edge: tuple):
         start, end = edge
-        breakpoints = False
         for obstacle in self.obstacles:
-            if np.array_equal(start, self.start) and np.array_equal(end, self.goal):
-                breakpoints = True
-            if obstacle.line_crosses(start, end, breakpoints=breakpoints) or obstacle.contains_line(start, end):
+            if obstacle.contains_point(start) or obstacle.contains_point(end):
+                return False
+         
+            if obstacle.line_crosses(start, end) or obstacle.contains_line(start, end):
                 return False
 
         return True 
@@ -228,14 +261,19 @@ class Map:
                 if i == j:
                     continue
                 edge = (node, neighbor)
-                if self.is_valid_edge(edge):
-                    valid = True
-                    for obstacle in self.obstacles:
-                        if obstacle.contains_point((node + neighbor) / 2):
-                            valid = False
-                            break
-                    if valid:
-                        edges.append(edge)
+                edges.append(edge)
+
+        #Insert all polygon edges
+        for obstacle in self.obstacles:
+            for i in range(len(obstacle.vertices)):
+                start = obstacle.vertices[i]
+                end = obstacle.vertices[(i + 1) % len(obstacle.vertices)]
+                edge = (start, end)
+                edges.append(edge)
+
+        for edge in edges:
+            if not self.is_valid_edge(edge):
+                edges = [e for e in edges if not (np.array_equal(e[0], edge[0]) and np.array_equal(e[1], edge[1]))]
 
         self.nodes = nodes
         self.edges = edges
@@ -258,7 +296,7 @@ class Map:
             return
         for edge in self.edges:
             start, end = edge
-            ax.plot([start[0], end[0]], [start[1], end[1]], 'k--', alpha=0.65, color='#829191', zorder=0)
+            ax.plot([start[0], end[0]], [start[1], end[1]], 'k--', alpha=0.65, color='#B478CE', zorder=0)
 
 
     def visualize(self, ax: plt.Axes = None, show: bool =  True, save: bool = False, outdir: str = 'out', tag: str = 'map.png'):
@@ -276,7 +314,7 @@ class Map:
 
         if self.path is not None:
             path = np.array(self.path)
-            ax.plot(path[:, 0], path[:, 1], 'r-', linewidth=3, label='Shortest Path', color='green', zorder=0)
+            ax.plot(path[:, 0], path[:, 1], 'r-', linewidth=3.5, label='Shortest Path', color='green', zorder=10)
 
         # Plot routing graph
         self.plot_routing_graph(ax)
@@ -301,7 +339,7 @@ if __name__ == '__main__':
     os.makedirs(OUT_DIR, exist_ok=True)
 
     np.random.seed(42)
-    num_tests = 10
+    num_tests = 350
     test_seeds = np.random.choice(range(num_tests), size=num_tests, replace=False)
 
     for seed in test_seeds:

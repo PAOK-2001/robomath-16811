@@ -75,6 +75,7 @@ if __name__ == "__main__":
     n_cases = [5, 27, 31,  143, 200, 1000, 5000]
     for n in tqdm(n_cases, desc="Generating convex hulls"):
         points = generate_random_points(n, seed = 56)
+        breakpoint()
         hull = convex_hull_2D(points)
         plot_convex_hull(points, hull)
         file_out = os.path.join(OUT_DIR, f'convex_hull_n_points{n}.png')
