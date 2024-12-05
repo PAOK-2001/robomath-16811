@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from enum import Enum
+from enum import IntEnum
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
@@ -17,7 +17,7 @@ def generate_random_points(n: int, seed: int = 0):
     points = np.random.uniform(low=-10, high=100, size=(n,2))
     return points
 
-class Orientation(Enum):
+class Orientation(IntEnum):
     COLINEAR = 0
     CLOCKWISE = 1
     COUNTER_CLOCKWISE = 2
