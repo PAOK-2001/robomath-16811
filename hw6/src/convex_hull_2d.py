@@ -14,7 +14,7 @@ def plot_convex_hull(points: np.array, hull: np.array, ax: plt.Axes = None):
 
 def generate_random_points(n: int, seed: int = 0):
     np.random.seed(seed)
-    points = np.random.uniform(low=-10, high=100, size=(n,2))
+    points = np.random.normal(loc=50, scale=20, size=(n, 2))
     return points
 
 class Orientation(IntEnum):
@@ -24,9 +24,6 @@ class Orientation(IntEnum):
 
 # Helper function to get the polar angle between two points
 def get_polar_angle(p1: np.array, p2: np.array) -> float:
-    '''
-    Returns the polar angle between two points.
-    '''
     angle = np.arctan2(p2[1] - p1[1], p2[0] - p1[0])
     return angle
 # Helper function to compute orientation of three points
@@ -40,10 +37,6 @@ def get_triplet_orientation(p1, p2, p3):
         return Orientation.CLOCKWISE
 
 def convex_hull_2D(points: np.array) -> np.array:
-    '''
-    Computes the convex hull of a set of 2D points using Graham Scan.
-    '''
-    # Pick the point with the smallest y-coordinate as the starting point
     start_idx = np.argmin(points[:, 1])
     start_point = points[start_idx]
     # Sort the points by polar angle with respect to the starting point
@@ -67,18 +60,15 @@ def convex_hull_2D(points: np.array) -> np.array:
     hull = np.array(hull_stack)
     return hull
 
-
 if __name__ == "__main__":
     OUT_DIR = os.path.join('output', 'convex_hull')
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    n_cases = [5, 27, 31,  143, 200, 1000, 5000]
+    n_cases = [7, 31, 500, 1000, 6000]
     for n in tqdm(n_cases, desc="Generating convex hulls"):
         points = generate_random_points(n, seed = 56)
-        breakpoint()
         hull = convex_hull_2D(points)
         plot_convex_hull(points, hull)
         file_out = os.path.join(OUT_DIR, f'convex_hull_n_points{n}.png')
         plt.savefig(file_out)
         plt.close()
-    

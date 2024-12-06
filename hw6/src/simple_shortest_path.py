@@ -12,9 +12,7 @@ def on_segment(p1, p2, q):
         return True
 
 def do_lines_intersect(l1: np.array, l2: np.array) -> bool:
-    '''
-    Check if two lines intersect.
-    '''
+
     p1, q1 = l1[0], l1[1]
     p2, q2 = l2[0], l2[1]
 
@@ -26,22 +24,11 @@ def do_lines_intersect(l1: np.array, l2: np.array) -> bool:
     # Base case for line intersection
     if o1 != o2 and o3 != o4:
         return True
-    
-    # Special cases for colinear points
-    if o1 == Orientation.COLINEAR and on_segment(p1, p2, q1):
-        return True 
-    if o2 == Orientation.COLINEAR and on_segment(p1, q2, q1):
-        return True
-    if o3 == Orientation.COLINEAR and on_segment(p2, p1, q2):
-        return True
-    if o4 == Orientation.COLINEAR and on_segment(p2, q1, q2):
-        return True
 
     return False
 
 def dijkstra(edges: list, start: np.array, goal: np.array) -> np.array:
     import heapq
-
     graph = {}
     # Build the graph
     for edge in edges:
@@ -53,13 +40,12 @@ def dijkstra(edges: list, start: np.array, goal: np.array) -> np.array:
             graph[e] = []
         graph[s].append(e)
         graph[e].append(s)
-    
     # Initialize the distance array
     dist = {node: float('inf') for node in graph}
     dist[tuple(start)] = 0
 
     prev = {node: None for node in graph}
-    pq = [(0, tuple(start))]  # (distance, node)
+    pq = [(0, tuple(start))] 
     while pq:
         current_dist, node = heapq.heappop(pq)
         if np.array_equal(node, goal):
@@ -96,7 +82,6 @@ class Polygon:
         vertix = self.vertices[0]
         intersection_count = 0 
 
-        # Loop through all vertices
         for i in range(1, len(self.vertices) + 1):
             next_vertix = self.vertices[i % len(self.vertices)]
             # Check if  point is within bounds
@@ -156,7 +141,7 @@ class Polygon:
             reflected_vertices.append([x_reflected, y_reflected])
         return Polygon(np.array(reflected_vertices))
 
-    def dialiate_by_polygon(self, polygon: 'Polygon'):
+    def dialiate_by_polygon(self, polygon: 'Polygon', color: str = '#62D085'):
         reference_point = polygon.vertices[0]
         # Reflect the shape about the reference point
         reflected_poly = self.reflect_about_point(polygon, reference_point)
@@ -168,23 +153,17 @@ class Polygon:
         # Add the reflected polygon to each vertex of the original polygon
         dialated_vertices = []
         for vertex in self.vertices:
-            dialated_vertices.append(vertex)
             for relative_vertex in relative_vertices:
                 dialated_vertex = vertex + relative_vertex
                 dialated_vertices.append(dialated_vertex)
         dialated_vertices = np.array(dialated_vertices)
         expanded_poly = convex_hull_2D(dialated_vertices)
-        return Polygon(expanded_poly)
-    
-
-    def line_intersects(self, p1: np.array, p2: np.array):
-        # Note: Using shapely for verification purposes, not used in the main implementation
-        line = shapely.LineString([p1, p2])
-        polygon = shapely.Polygon(self.vertices)
-        return line.crosses(polygon)
+        poly = Polygon(expanded_poly)
+        poly.set_color(color)
+        return poly
 
 class Map:
-    def __init__(self, bounds: tuple = None, goal: np.array = None, start: np.array = None):
+    def __init__(self, bounds: tuple = None):
         self.obstacles: list[Polygon] = []
         self.bounds: tuple = bounds
         self.goal: np.array = None
@@ -195,7 +174,13 @@ class Map:
 
     def add_obstacle(self, polygon: Polygon):
         self.obstacles.append(polygon)
+    
+    def set_start(self, start: np.array):
+        self.start = start
 
+    def set_goal(self, goal: np.array):
+        self.goal = goal
+    
     def init_random_map(
         self, 
         bounds: tuple, 
@@ -224,16 +209,17 @@ class Map:
             obstacle.set_color('black')
             self.add_obstacle(obstacle)
 
-        self.start = np.random.uniform([min_x, min_y], [max_x, max_y])
+        if self.start is None:
+            self.start = np.random.uniform([min_x, min_y], [max_x, max_y])
         if place_goal_in_obstacle:
             obstacle = np.random.choice(self.obstacles)
             min_x, min_y = np.min(obstacle.vertices, axis=0)
             max_x, max_y = np.max(obstacle.vertices, axis=0)
             self.goal = np.random.uniform([min_x, min_y], [max_x, max_y])
         else:
-            self.goal = np.random.uniform([min_x, min_y], [max_x, max_y])
-        self.robot_pos = self.start        
-        
+            if self.goal is None:
+                self.goal = np.random.uniform([min_x, min_y], [max_x, max_y])
+               
     def is_valid_edge(self, edge: tuple):
         start, end = edge
         for obstacle in self.obstacles:
@@ -285,7 +271,11 @@ class Map:
                 print('Failed to find a valid path.')
                 return None
 
-        path = dijkstra(self.edges, self.start, self.goal)
+        try:
+            path = dijkstra(self.edges, self.start, self.goal)
+        except:
+            print('Failed to find a valid path.')
+            path = None
         self.path = path
         return path
 
@@ -306,6 +296,9 @@ class Map:
         for obstacle in self.obstacles:
             polygon = MplPolygon(obstacle.vertices, closed=True, edgecolor=obstacle.get_color(), facecolor=obstacle.get_color(), alpha=0.5)
             ax.add_patch(polygon)
+            
+        for obstacle in self.obstacles:
+            ax.scatter(obstacle.vertices[:, 0], obstacle.vertices[:, 1], c='#312F2F')
         # Plot start and goal
 
         if self.start is not None and self.goal is not None:
@@ -319,11 +312,6 @@ class Map:
         # Plot routing graph
         self.plot_routing_graph(ax)
 
-        # if self.bounds is not None:
-        #     min_x, min_y, max_x, max_y = self.bounds
-        #     ax.set_xlim(min_x, max_x)
-        #     ax.set_ylim(min_y, max_y)
-        # else:
         ax.autoscale()
         ax.set_aspect('equal')
         ax.legend()
@@ -334,25 +322,3 @@ class Map:
             plt.savefig(fileout, dpi = 600)
             plt.close()
 
-if __name__ == '__main__':
-    OUT_DIR = os.path.join('output', 'simple_shortest_path')
-    os.makedirs(OUT_DIR, exist_ok=True)
-
-    np.random.seed(42)
-    num_tests = 350
-    test_seeds = np.random.choice(range(num_tests), size=num_tests, replace=False)
-
-    for seed in test_seeds:
-        side_length    = np.random.randint(3, 10)
-        bounds = (-side_length, -side_length, side_length, side_length)
-        map = Map(bounds=bounds)
-        map.init_random_map(bounds=bounds, obstacle_size=(1, 3), n_obstacles=np.random.randint(2,7), seed=seed, vertix_range=(4, 10))
-        map.build_routing_graph()
-        path = map.get_shortest_path(id=seed)
-        if path is None or len(path) == 0:
-            fig, ax = plt.subplots()
-            ax.text(0.5, 0.5, 'Failed to find a valid path.', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, color='red')
-            map.visualize(ax=ax, save=True, outdir=OUT_DIR, tag=f'map_{seed}_failed.png')
-
-        else:
-            map.visualize(save=True, outdir=OUT_DIR, tag=f'map_{seed}.png')
